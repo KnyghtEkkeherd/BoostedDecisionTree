@@ -7,7 +7,8 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.decomposition import PCA
 
 def calculateMean(data: np.array) -> float:
-    """_summary_
+    """
+    Calculate the mean of the array
 
     Args:
         data (np.array): _description_
