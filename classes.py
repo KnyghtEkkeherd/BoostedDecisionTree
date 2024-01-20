@@ -14,6 +14,7 @@ class BoostedDecisionTreeClassifier:
         - random_state: Random seed for reproducibility
         - n_components: Number of PCA components (if None, PCA is not used)
         """
+        
         self.n_estimators = n_estimators
         self.max_depth = max_depth
         self.random_state = random_state
@@ -29,6 +30,7 @@ class BoostedDecisionTreeClassifier:
         - X: Training data features (Numpy array or Pandas DataFrame)
         - y: Training data labels (Numpy array or Pandas Series)
         """
+        
         if self.n_components is not None:
             self.pca = PCA(n_components=self.n_components)
             X = self.pca.fit_transform(X)
@@ -52,6 +54,7 @@ class BoostedDecisionTreeClassifier:
         Returns:
         - predicted_labels: List of predicted class labels for the new data
         """
+        
         if self.ada_clf is None:
             raise ValueError("Classifier has not been trained. Call the 'fit' method first.")
         
@@ -72,6 +75,7 @@ class BoostedDecisionTreeClassifier:
         Returns:
         - predicted_labels: List of predicted class labels for the new data
         """
+        
         if self.n_components is not None:
             self.pca = PCA(n_components=self.n_components)
             new_data = self.pca.fit_transform(new_data)
