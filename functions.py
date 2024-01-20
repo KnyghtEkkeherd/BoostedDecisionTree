@@ -1,17 +1,13 @@
-import numpy as np
+import numpy
 import pandas
 import math
-import matplotlib.pyplot as plt
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.decomposition import PCA
 
-def calculateMean(data: np.array) -> float:
+def calculateMean(data: numpy.array) -> float:
     """
     Calculate the mean of the array
 
     Args:
-        data (np.array): input data array
+        data (numpy.array): input data array
 
     Returns:
         float: output mean
@@ -30,7 +26,7 @@ def calculatePlotValues(error_array):
     
     for parameter in error_array:
         y.append(calculateMean(parameter))
-        e.append(np.std(parameter))
+        e.append(numpy.std(parameter))
     return y, e
 
 
@@ -46,8 +42,8 @@ def getDataFrame(file_path: str) -> pandas.DataFrame:
     """
     
     # Load the CSV file into a DataFrame, assuming the first row contains column names
-    df = pandas.read_csv(file_path, index_col=0)  # Assuming the index is in the first column
-    return df
+    dataframe = pandas.read_csv(file_path, index_col=0)  # Assuming the index is in the first column
+    return dataframe
 
 
 def get_values(dataframe: pandas.DataFrame, column: str) -> list:
@@ -124,7 +120,7 @@ def assignInputClasses(dataframe: pandas.DataFrame, column_name: str) -> pandas.
     x_values = get_values(dataframe, column_name)
     dataframe[column_name] = dataframe[column_name].map(x_values)
     
-    return dataframe
+    return dataframe, x_values
 
 
 def checkColumnUniqness(dataframe: pandas.DataFrame, column_name: str) -> pandas.DataFrame:
@@ -176,7 +172,6 @@ def filter_correct_data_types(dataframe: pandas.DataFrame) -> pandas.DataFrame:
         'x12': bool,
         'x13': float
     }
-    
     for column_name, expected_type in expected_data_types.items():
         mask &= dataframe[column_name].apply(lambda x: isinstance(x, expected_type))
 
@@ -205,6 +200,7 @@ def extractData(dataframe: pandas.DataFrame) -> pandas.DataFrame:
     
     x_columns = dataframe.columns
     inputs = dataframe[x_columns].values
+    inputs = inputs[:, 1:]
     targets = None
     if 'y' in dataframe.columns:
         targets= dataframe['y'].values
@@ -213,8 +209,6 @@ def extractData(dataframe: pandas.DataFrame) -> pandas.DataFrame:
 
 
 def clearData(dataframe: pandas.DataFrame) -> pandas.DataFrame:
-    """
-    """
     dataframe = dataframe.dropna()
     dataframe = change_type(dataframe, 'x1')
     dataframe = change_type(dataframe, 'x2')
@@ -232,12 +226,12 @@ def clearData(dataframe: pandas.DataFrame) -> pandas.DataFrame:
     dataframe = filter_correct_data_types(dataframe)
     dataframe, y_values = assignTargetClasses(dataframe)
     # Data specifics that only x7 is a string
-    dataframe = assignInputClasses(dataframe, 'x7')
+    dataframe, x_values = assignInputClasses(dataframe, 'x7')
     
-    return dataframe
+    return dataframe, y_values, x_values
 
 
-def clearDataToClassify(dataframe: pandas.DataFrame) -> pandas.DataFrame:
+def clearDataToClassify(dataframe: pandas.DataFrame, x_values: dict) -> pandas.DataFrame:
     dataframe = change_type(dataframe, 'x1')
     dataframe = change_type(dataframe, 'x2')
     dataframe = change_type(dataframe, 'x3')
@@ -250,11 +244,22 @@ def clearDataToClassify(dataframe: pandas.DataFrame) -> pandas.DataFrame:
     dataframe = change_type(dataframe, 'x11')
     dataframe['x12'] = dataframe['x12'].astype(bool)
     dataframe = change_type(dataframe, 'x13')
-    
-    # Data specifics that only x7 is a string
-    dataframe = assignInputClasses(dataframe, 'x7')
+    dataframe['x7'] = dataframe['x7'].map(x_values)
     
     return dataframe
+
+
+def extractDataToClassify(dataframe):
+    """
+    Extract inputs and targets from the dataset
+    """
+    x_columns = dataframe.columns
+    inputs = dataframe[x_columns].values
+    targets = None
+    if 'y' in dataframe.columns:
+        targets= dataframe['y'].values
+    
+    return inputs, targets
 
 
 def reverse_dict(original_dict: dict) -> dict:
@@ -289,25 +294,25 @@ def reverseTargetAssignment(predictedLabels: list=None) -> dict:
         dict: assigned targets to labels
     """
     
-    df = getDataFrame("TrainOnMe.csv")
-    df = df.dropna()
-    df = change_type(df, 'x1')
-    df = change_type(df, 'x2')
-    df = change_type(df, 'x3')
-    df = change_type(df, 'x4')
-    df = change_type(df, 'x5')
-    df = change_type(df, 'x6')
-    df = change_type(df, 'x8')
-    df = change_type(df, 'x9')
-    df = change_type(df, 'x10')
-    df = change_type(df, 'x11')
-    df['x12'] = df['x12'].astype(bool)
-    df = change_type(df, 'x13')
+    dataframe = getDataFrame("TrainOnMe.csv")
+    dataframe = dataframe.dropna()
+    dataframe = change_type(dataframe, 'x1')
+    dataframe = change_type(dataframe, 'x2')
+    dataframe = change_type(dataframe, 'x3')
+    dataframe = change_type(dataframe, 'x4')
+    dataframe = change_type(dataframe, 'x5')
+    dataframe = change_type(dataframe, 'x6')
+    dataframe = change_type(dataframe, 'x8')
+    dataframe = change_type(dataframe, 'x9')
+    dataframe = change_type(dataframe, 'x10')
+    dataframe = change_type(dataframe, 'x11')
+    dataframe['x12'] = dataframe['x12'].astype(bool)
+    dataframe = change_type(dataframe, 'x13')
     
-    df = filter_correct_data_types(df)
-    y_values = assignTargetClasses(df)[1]
+    dataframe = filter_correct_data_types(dataframe)
+    y_values = assignTargetClasses(dataframe)[1]
     y_values = reverse_dict(y_values)
-    
+
     output_labels = []
     for label in predictedLabels:
         output_labels.append(y_values[label])
